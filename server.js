@@ -7,7 +7,7 @@ app.use(express.json());
 // ✅ CONNECT SUPABASE
 const supabase = createClient(
   "https://ppkpbvbjjxuzekyhltte.supabase.co",
-  "YOUR_SERVICE_ROLE_KEY"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwa3BidmJqanh1emVreWhsdHRlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTI5MTU5MCwiZXhwIjoyMDk0ODY3NTkwfQ.5Kh_fAKHcv60VKh26IbK2SxxUdA4jvM7P2OW0XooW7E"
 );
 
 // ======================
