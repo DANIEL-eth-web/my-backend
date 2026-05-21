@@ -1,4 +1,3 @@
-app.listen(3000, () => console.log("Server running"));
 // ======================
 // 🔐 ADMIN SECURITY
 // ======================
@@ -70,3 +69,4 @@ app.post("/admin/suspend-user", checkAdmin, async (req, res) => {
     message: "User suspended successfully"
   });
 });
+app.listen(3000, () => console.log("Server running"));
