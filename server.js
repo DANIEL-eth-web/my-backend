@@ -29,6 +29,40 @@ const supabase = createClient(
 );
 
 // ======================
+// 👤 CREATE USER (NEW)
+// ======================
+
+app.post("/create-user", async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    const { data: existing } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (!existing) {
+      await supabase.from("users").insert([
+        {
+          id: userId,
+          balance: 0,
+          status: "active"
+        }
+      ]);
+    }
+
+    res.json({
+      success: true,
+      message: "User created"
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ======================
 // 💰 DEPOSIT ROUTE
 // ======================
 
