@@ -1,75 +1,72 @@
-const express = require("express");
-const { createClient } = require("@supabase/supabase-js");
-
-const app = express();
-app.use(express.json());
-
-// ✅ CONNECT SUPABASE
-const supabase = createClient(
-  "https://ppkpbvbjjxuzekyhltte.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwa3BidmJqanh1emVreWhsdHRlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTI5MTU5MCwiZXhwIjoyMDk0ODY3NTkwfQ.5Kh_fAKHcv60VKh26IbK2SxxUdA4jvM7P2OW0XooW7E"
-);
-
+app.listen(3000, () => console.log("Server running"));
 // ======================
-// 💰 DEPOSIT ROUTE
+// 🔐 ADMIN SECURITY
 // ======================
-app.post("/deposit", async (req, res) => {
-  const { userId, crypto_type, amount, transaction_hash, proof_image_url } = req.body;
 
-  try {
-    // 1. Save deposit
-    await supabase.from("deposits").insert([
-      {
-        user_id: userId,
-        crypto_type,
-        amount,
-        transaction_hash,
-        proof_image_url
-      }
-    ]);
+const ADMIN_KEY = "my_admin_key_4839_virstra_secure";
 
-    // 2. Get user
-    let { data: user } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", userId)
-      .single();
-
-    // 3. Create or update balance
-    if (!user) {
-      await supabase.from("users").insert([
-        { id: userId, balance: amount }
-      ]);
-    } else {
-      await supabase
-        .from("users")
-        .update({ balance: Number(user.balance) + Number(amount) })
-        .eq("id", userId);
-    }
-
-    res.json({ message: "Deposit saved permanently ✔️" });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+function checkAdmin(req, res, next) {
+  if (req.headers["admin-key"] !== ADMIN_KEY) {
+    return res.status(403).json({ error: "Not allowed" });
   }
-});
+
+  next();
+}
 
 // ======================
-// 💼 BALANCE ROUTE
+// 👀 GET ALL USERS
 // ======================
-app.get("/balance/:userId", async (req, res) => {
+
+app.get("/admin/users", checkAdmin, async (req, res) => {
   const { data, error } = await supabase
     .from("users")
-    .select("balance")
-    .eq("id", req.params.userId)
-    .single();
+    .select("*");
 
-  if (error || !data) {
-    return res.json({ balance: 0 });
+  if (error) {
+    return res.status(500).json({ error: error.message });
   }
 
-  res.json({ balance: data.balance });
+  res.json(data);
 });
 
 // ======================
-app.listen(3000, () => console.log("Server running"));
+// 💰 UPDATE USER BALANCE
+// ======================
+
+app.post("/admin/update-balance", checkAdmin, async (req, res) => {
+  const { userId, amount } = req.body;
+
+  const { error } = await supabase
+    .from("users")
+    .update({ balance: Number(amount) })
+    .eq("id", userId);
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({
+    message: "Balance updated successfully"
+  });
+});
+
+// ======================
+// 🚫 SUSPEND USER
+// ======================
+
+app.post("/admin/suspend-user", checkAdmin, async (req, res) => {
+  const { userId } = req.body;
+
+  const { error } = await supabase
+    .from("users")
+    .update({ status: "suspended" })
+    .eq("id", userId);
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({
+    message: "User suspended successfully"
+  });
+});
